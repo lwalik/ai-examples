@@ -2,19 +2,22 @@
   "name": "@lg-chatbot/source",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "cli:serve": "nx serve lg-cli",
+    "cli:test": "NODE_OPTIONS=--experimental-vm-modules nx test lg-cli --watch"
+  },
   "private": true,
   "dependencies": {
     "@langchain/core": "^1.1.5",
     "@langchain/mcp-adapters": "^1.1.0",
-    "@langchain/ollama": "^1.0.3",
-    "@langchain/openai": "^1.1.3",
+    "@langchain/ollama": "^1.1.0",
+    "@langchain/openai": "^1.2.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "agentevals": "^0.0.6",
     "axios": "^1.6.0",
-    "langchain": "^1.1.5",
+    "langchain": "^1.2.0",
     "reflect-metadata": "^0.1.13",
     "rxjs": "^7.8.0"
   },
