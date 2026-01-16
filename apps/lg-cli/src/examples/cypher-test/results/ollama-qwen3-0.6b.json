@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:Node {label: 'A'}) RETURN a",
+    "log": "[100] The user's query is to match the variable 'varible a' for nodes with the label 'A'. The query is in natural language, so I need to translate it into a Cypher query. The query is straightforward: find all nodes of label 'A'. The Cypher syntax would be MATCH (a:Node {label: 'A'}) RETURN a. This matches the expected result.",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:Node{label: $a})-[:A]->(b:Node{label: $b})",
+    "log": "[100] The user is asking to match variable a for nodes with label A and variable b for nodes with label B. In a knowledge graph, this means matching the nodes that have label A to the nodes that have label B. However, the exact way to do this depends on the specific structure of the graph and how the variables are defined. The query should first find all nodes with label A, and then find all nodes with label B, and finally match them. This ensures that the results are accurate and meet the requirements.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a:VariableA) OR (b:VariableB) WHERE a.label = 'A' OR b.label = 'B'",
+    "log": "[1] To match variable a for nodes with labels A and B, you would use the MATCH statement to find all nodes that have the label A or B. The MATCH query is used to traverse the graph and find all such nodes. The WHERE clause is used to filter nodes with the label A or B.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a:VariableA) OR (a:VariableB) RETURN a",
+    "log": "[100] To match variable a for nodes with label A or B, use the MATCH query as follows: MATCH (a:VariableA) OR (a:VariableB) RETURN a. This will return all nodes with label A or B where the variable is a. The result will be a list of nodes with the specified label.",
+    "correctness": -1
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:A)",
+    "log": "[1] The user query specifies a need to match nodes with a specific label, which is 'A'. In Cypher, the syntax for matching nodes is to use the MATCH clause followed by a variable name (in this case, 'a') and the label in parentheses. Thus, the query can be constructed as 'MATCH (a:A)'.",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:A), (b:B) RETURN a, b",
+    "log": "[0.9] The user is looking to match two types of nodes in the graph, specifically those labeled 'A' and 'B'. In Neo4j, MATCH is used to find and retrieve nodes based on their labels. We need to define variables 'a' for nodes with label 'A' and 'b' for nodes with label 'B'. This is a straightforward MATCH query as we're not defining any specific relationship or conditions between the nodes, rather just matching all nodes of each type.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a) WHERE a:A OR a:B RETURN a",
+    "log": "[0.95] The query needs to find nodes that have labels 'A' and 'B'. Since the user refers to 'variable a', this suggests that it might be representing a variable or an aggregation of results that can include both types of nodes. Therefore, we use a MATCH clause to fetch all nodes with either label 'A' or 'B'. Since specifics were not given regarding the relationship between the nodes, we will match them independently.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a) WHERE a:A OR a:B RETURN a",
+    "log": "[0.95] The user query specifies that we want to match nodes based on their labels, which can either be 'A' or 'B'. In Cypher, we can match nodes using the MATCH clause and filter for the desired labels using the labels syntax. Since the user requests for both labels, we can utilize the 'OR' logical operator in the WHERE clause to achieve this.",
+    "correctness": -1
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:A) RETURN a",
+    "log": "[1] To find nodes with the label 'A', I would use the following Cypher query in Neo4j:",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:A), (b:B) RETURN a, b",
+    "log": "[1] Based on the given user query, we will create Cypher queries to find nodes with labels A and B.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a:A { property1: 'value1' }) OPTIONAL MATCH (a)-[:RELATION_LABEL]->(b) MATCH (b:B { property2: 'value2' }) RETURN a",
+    "log": "[0.98] To find a node with label 'A' or 'B', we will use the MATCH clause with optional pattern expressions",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a:A {name:{user_input}}) OR MATCH (b:B {name:{user_input}}) RETURN a, b",
+    "log": "[0.98] Find a node with label 'A' or 'B'",
+    "correctness": -1
+  }
+]

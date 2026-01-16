@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:A) RETURN a",
+    "log": "[0.95] The user wants to match nodes with label 'A' and assign them to a variable 'a'. This is a straightforward Cypher query that uses the MATCH clause to find all nodes with the specified label and binds them to the variable 'a'.",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:A), (b:B) RETURN a, b",
+    "log": "[1] The user wants to match nodes with label A as variable a and nodes with label B as variable b. This is a straightforward MATCH query in Cypher where we simply specify the labels and variable names.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a:A | a:B) RETURN a",
+    "log": "[0.95] The user wants to find nodes that have either label A or label B. In Cypher, this can be achieved using the MATCH clause with the OR operator or by using the pipe operator | in the node pattern. The variable 'a' will hold the nodes that match either label A or label B.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a:A | a:B) RETURN a",
+    "log": "[0.95] The user wants to find nodes with either label A or B. In Cypher, this can be achieved using the OR operator within the MATCH clause. The variable 'a' will represent the nodes that match either label A or label B.",
+    "correctness": -1
+  }
+]

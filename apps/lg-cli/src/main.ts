@@ -1,4 +1,5 @@
-import { ragAgentExample } from "./tutorials/rag-agent";
+import fs from 'fs';
+import { callFilesTools } from './examples/tools';
 
 const showAllMessages = (result: { messages: any[] }) => {
   console.log(result.messages.map(msg => msg.content).join("\n\n"));
@@ -15,7 +16,10 @@ const showResult = (result: any) => {
 
 async function main() {
 
-  showResult((await ragAgentExample()));
+  const resp = (await callFilesTools())
+  showResult(resp);
+
+  fs.writeFileSync('response.md', `${resp.content}`);
 }
 
 main().catch(console.error);

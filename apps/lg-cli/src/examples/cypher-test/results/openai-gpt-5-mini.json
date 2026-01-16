@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:A)\nRETURN a;",
+    "log": "[0.9] You asked to match variable a for nodes with label A. In Cypher, you bind a variable to nodes of a given label using parentheses with the variable and label: (a:A). The query below matches all nodes with label A and returns the bound variable a.",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:A), (b:B)\nRETURN a, b;",
+    "log": "[0.95] The user requested a Cypher MATCH that binds variable a to nodes with label A and variable b to nodes with label B. The simplest form is MATCH (a:A), (b:B) and then return the matched variables.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a:A:B)\nRETURN a;",
+    "log": "[0.95] To bind variable `a` to nodes that have both labels A and B, specify both labels on the node pattern separated by colons. The Cypher pattern (a:A:B) matches nodes that carry both labels A and B.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a)\nWHERE a:A OR a:B\nRETURN a;",
+    "log": "[0.95] To match a single variable 'a' for nodes that have either label A or label B, use a generic node pattern and filter by labels in a WHERE clause (a:A OR a:B). This is concise and returns nodes with either label in one MATCH. Alternatives would be two MATCH queries with UNION or separate MATCH lines, but the WHERE approach is preferred for simplicity.",
+    "correctness": -1
+  }
+]

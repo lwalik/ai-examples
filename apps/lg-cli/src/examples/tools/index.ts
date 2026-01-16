@@ -37,3 +37,35 @@ const response = await modelWithTools.invoke([{role: 'system', content: systemPr
   
 return response;
 }
+
+
+export async function rawTools() {
+  // const modelName = 'openai:gpt-4o';
+  // const modelName = 'ollama:qwen:0.5b';
+  // const modelName = 'ollama:smollm2:135m';
+  // const modelName = 'ollama:deepseek-r1:8b';
+  const modelName = 'ollama:devstral-small-2:24b';
+  // const modelName = 'ollama:codegemma:7b';
+
+  const task = "List all files in the folder";
+  const tools = `\`\`\`json ${JSON.stringify({
+    name: "listFiles",
+    description: "List the files in the file system",
+  })} \`\`\`
+  `;
+
+  const model = await initChatModel(modelName);
+
+  return await model.invoke(`
+  ## Tools
+  You have access to the following tools:
+  <tool>
+    ${tools}
+  </tool>
+
+  ## Task
+  ${task}
+  `);
+
+  //`You should invoke the <tool_call>listFiles</tool_call> wrap the answer in <tool_response>`
+}

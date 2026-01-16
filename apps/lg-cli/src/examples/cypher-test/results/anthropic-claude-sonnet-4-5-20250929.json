@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:A)",
+    "log": "[1] The user wants to match nodes with label 'A' and assign them to variable 'a'. This is a simple MATCH query in Cypher where we match nodes with a specific label. The syntax is MATCH (variable:Label).",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:A), (b:B) RETURN a, b",
+    "log": "[0.95] The user wants to match two different node types with specific labels. Node 'a' should match nodes with label 'A' and node 'b' should match nodes with label 'B'. This is a straightforward MATCH query with two node patterns. Since there's no relationship specified between them, this will return the Cartesian product of all A nodes with all B nodes.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a:A:B) RETURN a",
+    "log": "[0.95] The user wants to match a variable 'a' for nodes that have both labels A and B. In Neo4j Cypher, when a node has multiple labels, they are specified together using the colon syntax. The query should match nodes that have both Label A AND Label B.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a:A|B) RETURN a",
+    "log": "[0.95] The user wants to match nodes that have either label A or label B, and assign them to variable 'a'. In Cypher, we can use the pipe operator (|) to specify multiple labels in an OR fashion within the MATCH clause.",
+    "correctness": -1
+  }
+]

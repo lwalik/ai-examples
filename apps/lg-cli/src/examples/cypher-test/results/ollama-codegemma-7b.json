@@ -1,0 +1,30 @@
+[
+  {
+    "name": "Match varible a for nodes with with label A",
+    "expectedQueries": "MATCH (n:A) RETURN n",
+    "actualQuery": "MATCH (a:A) RETURN a",
+    "log": "[0.9] User query specifies to match nodes with label A. Therefore, the MATCH query will target nodes with label A.",
+    "correctness": -1
+  },
+  {
+    "name": "Match variable a for nodes with label A and variable b for nodes with label B",
+    "expectedQueries": "MATCH (a:A), (b:B) RETURN a, b\nMATCH (a:A) MATCH (b:B) RETURN a, b",
+    "actualQuery": "MATCH (a:A) <-[:RELATION_TYPE]-(b:B) RETURN a, b",
+    "log": "[0.8] Match variable a for nodes with label A and variable b for nodes with label B",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with labels A and B",
+    "expectedQueries": "MATCH (a:A:B) RETURN a",
+    "actualQuery": "MATCH (a:A)-[:REL]->(b:B) RETURN a, b",
+    "log": "[1] Based on the user query, we need to match nodes with labels A and B.",
+    "correctness": -1
+  },
+  {
+    "name": "Match varible a for nodes with label A or B",
+    "expectedQueries": "MATCH (a:A|B) RETURN a",
+    "actualQuery": "MATCH (a:A|B) RETURN a",
+    "log": "[1] Based on the user query, we need to match nodes with labels A or B. The MATCH clause allows us to do this.",
+    "correctness": -1
+  }
+]
