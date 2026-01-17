@@ -1,5 +1,5 @@
 export interface LogEntry {
-  time: string;
+  timestamp: number; // Epoch timestamp in milliseconds
   level: 'INFO' | 'WARN' | 'ERROR' | 'DEBUG';
   service: string;
   message: string;

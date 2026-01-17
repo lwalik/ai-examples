@@ -1,15 +1,14 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
-import { LogEntry, LogsResponse, LogTypeDistribution, LogVolumeData } from '../models/log.model';
+import { LogEntry, LogsResponse, LogStats, LogTypeDistribution, LogVolumeData } from './log.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class LogService {
   private logsUrl = '/assets/logs.json';
-
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getLogs(): Observable<LogsResponse> {
     return this.http.get<LogsResponse>(this.logsUrl);
@@ -21,6 +20,17 @@ export class LogService {
     );
   }
 
+  getLastLogs(count = 10): Observable<LogEntry[]> {
+    return this.getRecentLogs().pipe(
+      map(logs => {
+        // Sort by timestamp descending (latest first) and take the first N
+        return [...logs]
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, count);
+      })
+    );
+  }
+
   getLogVolumeData(): Observable<LogVolumeData[]> {
     return this.getRecentLogs().pipe(
       map(logs => {
@@ -28,14 +38,15 @@ export class LogService {
         const hourCounts: Record<string, number> = {};
         for (let hour = 0; hour < 24; hour++) {
           const hourStr = hour.toString().padStart(2, '0');
-          hourCounts[`${hourStr}:00`] = 0;
+          hourCounts[`${hourStr}`] = 0;
         }
 
         // Reduce logs to count by hour
         const counts = logs.reduce((acc, log) => {
-          // Extract hour from time string (format: "HH:MM:SS")
-          const hour = log.time.substring(0, 2);
-          const hourKey = `${hour}:00`;
+          // Extract hour from timestamp
+          const date = new Date(log.timestamp);
+          const hour = date.getHours().toString().padStart(2, '0');
+          const hourKey = `${hour}`;
           
           if (acc[hourKey] !== undefined) {
             acc[hourKey]++;
@@ -98,6 +109,24 @@ export class LogService {
             color: colorMap[level] || 'bg-gray-500'
           }))
           .sort((a, b) => b.percentage - a.percentage); // Sort by percentage descending
+      })
+    );
+  }
+
+  getStats(): Observable<LogStats> {
+    return this.getRecentLogs().pipe(
+      map(logs => {
+        const total = logs.length;
+        const errors = logs.filter(log => log.level === 'ERROR').length;
+        const warnings = logs.filter(log => log.level === 'WARN').length;
+        const successRate = total > 0 ? ((total - errors) / total) * 100 : 0;
+
+        return {
+          totalLogs: total,
+          errors,
+          warnings,
+          successRate: Math.round(successRate * 10) / 10 // Round to 1 decimal place
+        };
       })
     );
   }
