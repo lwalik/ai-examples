@@ -1,0 +1,17 @@
+FROM functiongemma:270m
+
+TEMPLATE """{{ if .System }}<start_of_turn>developer
+{{ .System }}<end_of_turn>
+{{ end }}{{ if .Tools }}<start_of_turn>developer
+{{ range .Tools }}<start_function_declaration>
+declaration:{{ .Function.Name }}{description:{{ .Function.Description }}{{ if .Function.Parameters }},parameters:{{ .Function.Parameters }}{{ end }}}
+<end_function_declaration>
+{{ end }}<end_of_turn>
+{{ end }}{{ range .Messages }}{{ if eq .Role "user" }}<start_of_turn>user
+{{ .Content }}<end_of_turn>
+{{ else if eq .Role "assistant" }}<start_of_turn>model
+{{ if .ToolCalls }}{{ range .ToolCalls }}<start_function_call>call:{{ .Function.Name }}{{ if .Function.Arguments }}{{ .Function.Arguments }}{{ end }}<end_function_call>
+{{ end }}{{ else }}{{ .Content }}{{ end }}<end_of_turn>
+{{ else if eq .Role "tool" }}<start_function_response>response:{{ .Name }}{{ .Content }}<end_function_response>
+{{ end }}{{ end }}{{ if .AddGenerationPrompt }}<start_of_turn>model
+{{ end }}"""
