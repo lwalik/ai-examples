@@ -1,39 +1,25 @@
 import { CommonModule } from "@angular/common";
-import { Component, effect, ElementRef, inject, signal, ViewChild } from "@angular/core";
+import { Component, inject, signal } from "@angular/core";
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from "@angular/forms";
+import { take } from "rxjs";
+import { Message, OllamaChatResponse, OllamaService, OllamaTool } from "../llm/ollama.service";
 import { ToolRegistry } from "../tools/tool.registry";
-import { Message, OllamaChatResponse, OllamaService } from "./ollama.service";
+import { ScrollToBottomOnContentChangeDirective } from "./scroll.directive";
 
 export interface ChatMessage {
   type: 'user' | 'assistant';
   content: string;
   timestamp: string;
-  functionCall?: {
-    name: string;
-    parameters: Record<string, unknown>;
-    status: 'success' | 'error';
-    result?: string;
-  };
+  status: 'loading' | 'success' | 'error';
 }
 
-export interface FunctionGemmaResponse {  name: string; parameters: Record<string, string> }
 
-export interface ToolContext {
-  definition: {
-    name: string;
-    description: string;
-    parameters: {
-      type: string;
-      properties: Record<string, { type: string; description: string; enum?: string[] }>;
-      required: string[];
-    };
-  }
-  execute: (args: any) => string | void;
-}
-
-@Component({selector: 'app-chat', templateUrl: './chat.component.html', imports: [CommonModule, ReactiveFormsModule]})
+@Component({
+  selector: 'app-chat', 
+  templateUrl: './chat.component.html', 
+  imports: [CommonModule, ReactiveFormsModule, ScrollToBottomOnContentChangeDirective]
+})
 export class ChatComponent {
-  @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
   
   private readonly fb = inject(FormBuilder);
   private readonly ollamaService = inject(OllamaService);
@@ -49,33 +35,13 @@ export class ChatComponent {
   
   // Track if we're currently processing a message to avoid duplicate calls
   private isProcessing = false;
-  private readonly model = 'functiongemma:270m';
 
-  constructor() {
-    // Auto-scroll to bottom when messages change
-    effect(() => {
-      this.chatMessages(); // Track changes
-      this.scrollToBottom();
-    });
-
-    // Auto-scroll when chat opens
-    effect(() => {
-      if (this.isChatOpen()) {
-        setTimeout(() => this.scrollToBottom(), 100);
-      }
-    });
-  }
+  
   
   toggleChat() {
     this.isChatOpen.update(open => !open);
   }
 
-  private scrollToBottom(): void {
-    if (this.messagesContainer) {
-      const element = this.messagesContainer.nativeElement;
-      element.scrollTop = element.scrollHeight;
-    }
-  }
 
   formatParameters(params: Record<string, unknown>): string {
     return JSON.stringify(params, null, 2);
@@ -90,121 +56,73 @@ export class ChatComponent {
         const userMessage: ChatMessage = {
           type: 'user',
           content: messageText,
-          timestamp: new Date().toLocaleTimeString()
+          timestamp: new Date().toLocaleTimeString(),
+          status: 'success'
         };
+
+        const messages = [...this.chatMessages(), userMessage];
+        const ollamaMessages = messages.map(message => ({ role: message.type, content: message.content }));
         
-        this.chatMessages.update(messages => [...messages, userMessage]);
+        this.chatMessages.set([...messages, { type: 'assistant', content: '...', timestamp: new Date().toLocaleTimeString(), status: 'loading' }]);
         this.chatForm.reset();
-        
-        // Automatically call Ollama when user message is added
-        this.callOllama(messageText);
+
+        this.callOllama(ollamaMessages, this.toolRegistry.getAll(), (content: string, isSuccess: boolean) => {
+          this.chatMessages.update(messages => {
+            messages[messages.length - 1].content = content;
+            messages[messages.length - 1].status = isSuccess ? 'success' : 'error';
+            return messages;
+          });
+        });
       }
     }
   }
 
-  private callOllama(userMessage: string, conversationHistory: Message[] = [], previousFunctionCall?: { name: string; parameters: Record<string, unknown>; status: 'success' | 'error'; result?: string }) {
-    if (this.isProcessing) return;
+  private callOllama(messages: Message[] = [], tools: OllamaTool[] = [], callback: (content: string, isSuccess: boolean) => void) {
+    const model = 'functiongemma:270m';
     
-    this.isProcessing = true;
-    const messages: Message[] = conversationHistory.length > 0 
-      ? conversationHistory 
-      : userMessage ? [{ role: 'user', content: userMessage }] : [];
-    
-    this.ollamaService.chatWithTools(this.model, messages, this.toolRegistry.getAll()).subscribe({
+    this.ollamaService.chatWithTools(model, messages, tools).pipe(take(1)).subscribe({
       next: (response) => {
-        console.log('Response:', response.message);
         const functionCall = this.resolveFunctionCall(response);
         
         if (functionCall) {
-          // Execute the tool
+          const result = `Called ${functionCall.name}`;
           try {
             const toolContext = this.toolRegistry.getByName(functionCall.name);
             if (toolContext) {
-              const result = toolContext.execute(functionCall.parameters);
-              if (result !== undefined) {
-                functionCall.result = result;
-              }
-            } else {
-              functionCall.status = 'error';
-              functionCall.result = `Tool ${functionCall.name} not found`;
+              const fnResult = toolContext.execute(functionCall.parameters);
+              callback(fnResult ?? result, true);
+              return;
             }
           } catch (error) {
-            console.error('Tool execution error:', error);
-            functionCall.status = 'error';
-            functionCall.result = `Error executing tool: ${error}`;
+            callback(`Tool ${functionCall.name} Error: ${error}`, false);
+            return;
           }
-          
-          // Continue conversation with tool result (don't add message yet)
-          const updatedHistory: Message[] = [
-            ...messages,
-            { role: 'assistant', content: response.message.content || '', tool_calls: response.message.tool_calls },
-            { role: 'tool', name: functionCall.name, content: functionCall.result || '' }
-          ];
-          
-          // Make another call to get the final response, passing the function call info
-          this.isProcessing = false;
-          this.callOllama('', updatedHistory, functionCall);
-        } else {
-          // No tool call - this is the final response
-          const assistantMessage: ChatMessage = {
-            type: 'assistant',
-            content: response.message.content || 'No response',
-            timestamp: new Date().toLocaleTimeString(),
-            ...(previousFunctionCall && {
-              functionCall: {
-                ...previousFunctionCall,
-                status: 'success' as const
-              }
-            })
-          };
-          
-          this.chatMessages.update(messages => [...messages, assistantMessage]);
-          this.isProcessing = false;
         }
+        callback('Tool not found', false);
       },
-      error: (error) => {
-        console.error('Ollama error:', error);
-        this.isProcessing = false;
-        
-        // Add error message
-        const errorMessage: ChatMessage = {
-          type: 'assistant',
-          content: 'Error processing request',
-          timestamp: new Date().toLocaleTimeString(),
-          functionCall: {
-            name: 'unknown',
-            parameters: {},
-            status: 'error'
-          }
-        };
-        
-        this.chatMessages.update(messages => [...messages, errorMessage]);
+      error: (error) => {    
+        callback('Error processing request', false);
       }
     });
   }
 
-  private resolveFunctionCall(response: OllamaChatResponse): { name: string; parameters: Record<string, unknown>; status: 'success' | 'error'; result?: string } | undefined {
+  private resolveFunctionCall(response: OllamaChatResponse): { name: string; parameters: Record<string, unknown>;} | undefined {
     // Check if tool_calls exists
     if (response.message.tool_calls?.length) {
       const tool = response.message.tool_calls[0].function;
       return {
         name: tool.name,
         parameters: tool.arguments as Record<string, unknown>,
-        status: 'success'
       };
-      
-      
     } else if (response.message.content) {
       // Try to parse JSON from content
       try {
         const parsed = JSON.parse(response.message.content) as { name: string; parameters?: Record<string, unknown>; arguments?: Record<string, unknown> };
         // FunctionGemma uses 'arguments', but interface expects 'parameters' - normalize it
         const params = parsed.arguments || parsed.parameters || {};
-        
         return {
           name: parsed.name,
           parameters: params as Record<string, unknown>,
-          status: 'success',
         };
       } catch {
         // Not a tool call, just regular content - ignore for command-based system

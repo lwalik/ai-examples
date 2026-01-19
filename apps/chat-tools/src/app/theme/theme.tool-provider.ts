@@ -9,20 +9,28 @@ export function provideThemeTool(): Provider {
       return () => {
         toolRegistry.registerTool('change_theme', {
           execute: (args: { theme: 'light' | 'dark' }) => {
-            themeService.changeTheme(args.theme);
-            return `Theme changed to ${args.theme}`;
+            console.log('change_theme', args);
+            const theme = args.theme.toLowerCase();
+            if (theme !== 'light' && theme !== 'dark') {
+              return 'Could not change the theme try this spelling: light or dark';
+            }
+            themeService.changeTheme(theme);
+            return `Theme changed to ${theme}`;
           },
           definition: {
-            name: 'change_theme',
-            description: 'Change the theme of the application.',
-            parameters: {
-              type: 'object',
-              properties: {
-                theme: { type: 'string', description: 'The theme to change to', enum: ['light', 'dark'] },
+            type: 'function',
+            function: {
+              name: 'change_theme',
+              description: 'Change the theme of the application. The only parameter values are light and dark.',
+              parameters: {
+                type: 'object',
+                properties: {
+                  theme: { type: 'string', description: 'The theme to change to', enum: ['light', 'dark'] },
+                },
+                required: ['theme'],
               },
-              required: ['theme'],
             },
-          },
+          }
         });
       };
     },

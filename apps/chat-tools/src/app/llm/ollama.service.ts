@@ -3,37 +3,50 @@ import { inject, Injectable } from '@angular/core';
 import { catchError, map, Observable, throwError } from 'rxjs';
 
 interface OllamaGenerateRequest {
-  model: string;
-  prompt: string;
-  stream: boolean;
-  format: string;
-  options: {
-    temperature: number;
+  readonly model: string;
+  readonly prompt: string;
+  readonly stream: boolean;
+  readonly format: string;
+  readonly options: {
+    readonly temperature: number;
   };
 }
 
 interface OllamaGenerateResponse<T> {
-  response: T;
-  done: boolean;
+  readonly response: T;
+  readonly done: boolean;
 }
 
 export interface Message {
-  role: string;
-  content: string;
-  tool_calls?: ToolCall[];
-  name?: string;
+  readonly role: string;
+  readonly content: string;
+  readonly tool_calls?: ToolCall[];
+  readonly name?: string;
 }
 
 export interface ToolCall {
-  function: { name: string; arguments: Record<string, string> }
+  readonly function: { readonly name: string; readonly arguments: Record<string, string> }
 }
 
 export interface AssistantMessage extends Message {
-  tool_calls?: ToolCall[];
+  readonly tool_calls?: ToolCall[];
 }
 
 export interface OllamaChatResponse {
-  message: AssistantMessage;
+  readonly message: AssistantMessage;
+}
+
+export interface OllamaTool {
+  readonly type: 'function';
+  readonly function: {
+    readonly name: string;
+    readonly description: string;
+    readonly parameters: {
+      readonly type: string;
+      readonly properties: Record<string, { readonly type: string; readonly description: string; readonly enum?: string[] }>;
+      readonly required: string[];
+    };
+  }
 }
 
 @Injectable({
