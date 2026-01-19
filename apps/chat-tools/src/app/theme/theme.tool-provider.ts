@@ -9,10 +9,9 @@ export function provideThemeTool(): Provider {
       return () => {
         toolRegistry.registerTool('change_theme', {
           execute: (args: { theme: 'light' | 'dark' }) => {
-            console.log('change_theme', args);
             const theme = args.theme.toLowerCase();
             if (theme !== 'light' && theme !== 'dark') {
-              return 'Could not change the theme try this spelling: light or dark';
+              return `ERROR: Invalid theme parameter "${args.theme}". You must call change_theme again with theme="light" or theme="dark". Do not apologize, just retry the tool call with the correct parameter.`;
             }
             themeService.changeTheme(theme);
             return `Theme changed to ${theme}`;

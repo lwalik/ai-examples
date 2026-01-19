@@ -1,40 +1,40 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { catchError, map, Observable, throwError } from 'rxjs';
+import { Observable } from 'rxjs';
 
-interface OllamaGenerateRequest {
-  readonly model: string;
-  readonly prompt: string;
-  readonly stream: boolean;
-  readonly format: string;
-  readonly options: {
-    readonly temperature: number;
-  };
+export interface SystemMessage {
+  readonly role: 'system';
+  readonly content: string;
 }
 
-interface OllamaGenerateResponse<T> {
-  readonly response: T;
-  readonly done: boolean;
+export interface UserMessage {
+  readonly role: 'user';
+  readonly content: string;
 }
 
-export interface Message {
-  readonly role: string;
+interface ToolCall {
+  readonly id: string;
+  readonly function: {
+    readonly name: string;
+    readonly arguments: Record<string, string>;
+    readonly index: number
+  }
+}
+
+export interface AssistantMessage {
+  readonly role: 'assistant';
   readonly content: string;
   readonly tool_calls?: ToolCall[];
-  readonly name?: string;
 }
 
-export interface ToolCall {
-  readonly function: { readonly name: string; readonly arguments: Record<string, string> }
+export interface ToolMessage {
+  readonly role: 'tool';
+  readonly name: string;
+  readonly content: string;
+  readonly tool_call_id: string;
 }
 
-export interface AssistantMessage extends Message {
-  readonly tool_calls?: ToolCall[];
-}
-
-export interface OllamaChatResponse {
-  readonly message: AssistantMessage;
-}
+export type Message = SystemMessage | UserMessage | AssistantMessage | ToolMessage;
 
 export interface OllamaTool {
   readonly type: 'function';
@@ -49,6 +49,10 @@ export interface OllamaTool {
   }
 }
 
+interface OllamaChatResponse {
+  readonly message: AssistantMessage;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -56,36 +60,7 @@ export class OllamaService {
   private readonly http = inject(HttpClient);
   private readonly ollamaUrl = 'http://localhost:11434/api';
 
-  generate<T>(prompt: string, modelName: string, options: { temperature: number } = { temperature: 0 }): Observable<Partial<T>> {;
-
-    const request: OllamaGenerateRequest = {
-      model: modelName,
-      prompt,
-      stream: false,
-      format: 'json',
-      options
-    };
-
-    return this.http.post<OllamaGenerateResponse<string>>(this.ollamaUrl + '/generate', request).pipe(
-      map((response) => {
-        try {
-          // With format: 'json', Ollama returns valid JSON in the response field
-          // Parse it directly since it's guaranteed to be valid JSON
-          const parsed = JSON.parse(response.response) as Partial<T>;
-          return parsed;
-        } catch (error) {
-          throw new Error(`Failed to parse Ollama JSON response: ${error instanceof Error ? error.message : 'Unknown error'}`);
-        }
-      }),
-      catchError((error) => {
-        return throwError(() => 
-          new Error(error.error?.error || error.message || 'Failed to generate filters from Ollama')
-        );
-      })
-    );
-  }
-
-  chatWithTools(model: string, messages: Message[], tools: any[], options: { temperature: number } = { temperature: 0 }): Observable<OllamaChatResponse> {
+  chatWithTools(model: string, messages: Message[], tools: OllamaTool[] = [], options: { temperature: number } = { temperature: 0 }): Observable<OllamaChatResponse> {
     return this.http.post<OllamaChatResponse>(this.ollamaUrl + '/chat', {
       model,
       messages,

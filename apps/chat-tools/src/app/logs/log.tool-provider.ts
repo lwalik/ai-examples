@@ -10,6 +10,10 @@ export function provideLogTools(): Provider {
         // Tool to filter logs by level
         toolRegistry.registerTool('filter_logs_by_level', {
           execute: (args: { level: string }) => {
+            const level = args.level.toUpperCase();
+            if (level !== 'INFO' && level !== 'WARN' && level !== 'ERROR' && level !== 'DEBUG') {
+              return 'Error: Could not filter logs by level try this spelling: INFO, WARN, ERROR, or DEBUG';
+            }
             logsState.applyFilter({ level: args.level as 'INFO' | 'WARN' | 'ERROR' | 'DEBUG' });
             return `Filtered logs to show only ${args.level} level logs`;
           },

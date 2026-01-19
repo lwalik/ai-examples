@@ -11,7 +11,7 @@ export class ThemeService {
   constructor() {
     if (this.document.defaultView?.matchMedia('(prefers-color-scheme: dark)').matches) {
       this.isDarkMode.set(true);
-      document.documentElement.classList.add('dark');
+      this.document.documentElement.classList.add('dark');
     }
   }
 
