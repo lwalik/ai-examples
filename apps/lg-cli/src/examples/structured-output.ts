@@ -4,7 +4,8 @@ import { z } from "zod";
 export async function structuredOutputExample() {
   // const modelName = 'ollama:qwen:0.5b';
   // const modelName = 'openai:gpt-5-mini';
-  const modelName = 'ollama:devstral-small-2:24b';
+  // const modelName = 'ollama:devstral-small-2:24b';
+  const modelName = 'ollama:codegemma:7b';
   // const systemPrompt = `
   // You are a SQL expert with knowledge about Typescript AST.
 
@@ -69,13 +70,13 @@ export async function structuredOutputExample() {
 
   const structuredModel = model.withStructuredOutput(z.object({
     reasoning: z.string(),
-    answer: z.string()
+    answer: z.string(),
   }));
 
   return await structuredModel.invoke(`
     ${systemPrompt}
   
-    Explain how the world was made in 1 sentence
+    What is the capital of Bungalunga?
     `
   );
 }

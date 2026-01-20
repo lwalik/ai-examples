@@ -1,5 +1,4 @@
-import fs from 'fs';
-import { callFilesTools } from './examples/tools';
+import { checkReasoning } from "./examples/reasoning";
 
 const showAllMessages = (result: { messages: any[] }) => {
   console.log(result.messages.map(msg => msg.content).join("\n\n"));
@@ -16,10 +15,10 @@ const showResult = (result: any) => {
 
 async function main() {
 
-  const resp = (await callFilesTools())
+  const resp = (await checkReasoning())
   showResult(resp);
 
-  fs.writeFileSync('response.md', `${resp.content}`);
+  // fs.writeFileSync('response.md', `${resp.content}`);
 }
 
 main().catch(console.error);
